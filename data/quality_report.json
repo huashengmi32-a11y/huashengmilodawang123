@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T20:18:06+08:00",
+  "generated_at": "2026-09-21T20:45:43+08:00",
   "source": {
     "name": "新浪财经",
     "list_url": "http://vip.stock.finance.sina.com.cn/corp/go.php/vISSUE_ShareBonus/stockid/{code}.phtml",
@@ -12,7 +12,7 @@
     "stocks": 3,
     "dividend_records": 92,
     "rights_records": 4,
-    "issues": 8,
+    "issues": 9,
     "duplicates_removed": 0,
     "detail_pages": 96
   },
@@ -65,13 +65,22 @@
       "description": "同一股票下 (公告日期) 不重复，重复记录清理后保留一条",
       "hits": 0,
       "passed": true
+    },
+    {
+      "id": "R8",
+      "name": "公告日期合理性",
+      "description": "公告日期不得早于 1990-01-01；源站以 1900-01-01 表示未知日期，命中项保留记录但不派生年度",
+      "hits": 1,
+      "passed": false
     }
   ],
   "issue_summary": {
-    "提示": 8
+    "提示": 8,
+    "警告": 1
   },
   "issue_by_rule": {
-    "R2": 8
+    "R2": 8,
+    "R8": 1
   },
   "field_coverage": {
     "stock_code": {
@@ -97,7 +106,14 @@
     },
     "announce_date": {
       "label": "公告日期",
-      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd",
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd；源站未知日期会以 1900-01-01 占位",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "announce_date_suspect": {
+      "label": "公告日期存疑",
+      "description": "派生字段：公告日期早于 1990-01-01，判定为源站占位日期，该行不参与年度派生与区间统计",
       "non_null": 92,
       "total": 92,
       "rate": 1.0
@@ -105,16 +121,16 @@
     "dividend_year": {
       "label": "分红年度",
       "description": "派生字段：按公告月份推断的利润所属年度",
-      "non_null": 92,
+      "non_null": 91,
       "total": 92,
-      "rate": 1.0
+      "rate": 0.9891
     },
     "allocation_type": {
       "label": "分配类型",
       "description": "派生字段：年度分配 / 中期分配（按公告月份推断）",
-      "non_null": 92,
+      "non_null": 91,
       "total": 92,
-      "rate": 1.0
+      "rate": 0.9891
     },
     "implement_year": {
       "label": "实施年度",
@@ -260,7 +276,7 @@
     },
     "announce_date": {
       "label": "公告日期",
-      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd",
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd；源站未知日期会以 1900-01-01 占位",
       "non_null": 4,
       "total": 4,
       "rate": 1.0
@@ -351,7 +367,11 @@
     },
     "announce_date": {
       "label": "公告日期",
-      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd"
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd；源站未知日期会以 1900-01-01 占位"
+    },
+    "announce_date_suspect": {
+      "label": "公告日期存疑",
+      "description": "派生字段：公告日期早于 1990-01-01，判定为源站占位日期，该行不参与年度派生与区间统计"
     },
     "dividend_year": {
       "label": "分红年度",
@@ -434,6 +454,7 @@
     "字段「分红年度」「分配类型」为推断字段：公告月份 ≤ 8 归入上一年度分配，≥ 9 归入本期中期/特别分配，用于分组统计，不代表公司官方口径。",
     "「派息(税前)(元/10股)」与明细页「税前红利」均为每 10 股口径，派生字段「每股派息税前」按 ÷10 折算。",
     "明细页中存在大量「--」占位符，统一按缺失值处理，不计入字段覆盖率分子。",
+    "源站对未知公告日期使用 1900-01-01 占位（本次命中 1 条：平安银行 1991 年送股记录）。该记录保留在数据集中并标记「公告日期存疑」，但不参与分红年度派生与日期区间统计。",
     "原始 HTML 保存在 data/raw/ 并被 .gitignore 忽略，可通过 fetch_sina.py 复现。"
   ]
 }

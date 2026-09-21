@@ -34,6 +34,9 @@ from config import (
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 NUMBER_PATTERN = re.compile(r"^-?\d+(\.\d+)?$")
 
+# 源站对未知公告日期使用 1900-01-01 占位，早于该阈值的日期一律视为脏数据
+EARLIEST_REASONABLE_ANNOUNCE_DATE = "1990-01-01"
+
 # 列表页表头与字段的对应关系（分红表为 9 列，配股表为 11 列）
 DIVIDEND_LIST_FIELDS = [
     "announce_date",
@@ -76,6 +79,7 @@ DIVIDEND_COLUMNS = [
     "stock_name",
     "record_id",
     "announce_date",
+    "announce_date_suspect",
     "dividend_year",
     "allocation_type",
     "implement_year",
@@ -114,7 +118,7 @@ RIGHTS_COLUMNS = [
     "source_url",
 ]
 
-BOOLEAN_FIELDS = ("has_cash", "has_bonus_share", "has_transfer_share")
+BOOLEAN_FIELDS = ("announce_date_suspect", "has_cash", "has_bonus_share", "has_transfer_share")
 
 # 六条数据质量规则：既用于逐条打标，也汇总进质量报告
 CHECKS = [
@@ -153,6 +157,11 @@ CHECKS = [
         "name": "主键唯一",
         "description": "同一股票下 (公告日期) 不重复，重复记录清理后保留一条",
     },
+    {
+        "id": "R8",
+        "name": "公告日期合理性",
+        "description": "公告日期不得早于 1990-01-01；源站以 1900-01-01 表示未知日期，命中项保留记录但不派生年度",
+    },
 ]
 
 NOTES = [
@@ -161,6 +170,8 @@ NOTES = [
     "「派息(税前)(元/10股)」与明细页「税前红利」均为每 10 股口径，"
     "派生字段「每股派息税前」按 ÷10 折算。",
     "明细页中存在大量「--」占位符，统一按缺失值处理，不计入字段覆盖率分子。",
+    "源站对未知公告日期使用 1900-01-01 占位（本次命中 1 条：平安银行 1991 年送股记录）。"
+    "该记录保留在数据集中并标记「公告日期存疑」，但不参与分红年度派生与日期区间统计。",
     "原始 HTML 保存在 data/raw/ 并被 .gitignore 忽略，可通过 fetch_sina.py 复现。",
 ]
 
@@ -331,7 +342,10 @@ def detail_cache_name(code: str, announce_date: str) -> str:
 def derive_dividend_fields(record: dict[str, Any]) -> dict[str, Any]:
     """把公告日期换算成统计口径，并派生布尔标记与每股口径。"""
     announce = record.get("announce_date")
-    if announce:
+    suspect = bool(announce) and announce < EARLIEST_REASONABLE_ANNOUNCE_DATE
+    record["announce_date_suspect"] = suspect
+
+    if announce and not suspect:
         year, month = int(announce[:4]), int(announce[5:7])
         if month <= 8:
             record["dividend_year"] = year - 1
@@ -343,7 +357,8 @@ def derive_dividend_fields(record: dict[str, Any]) -> dict[str, Any]:
         record["dividend_year"] = None
         record["allocation_type"] = None
 
-    implement_date = record.get("ex_dividend_date") or announce
+    # 实施年度优先取除权除息日，占位公告日期不参与回退
+    implement_date = record.get("ex_dividend_date") or (announce if not suspect else None)
     record["implement_year"] = int(implement_date[:4]) if implement_date else None
 
     cash = record.get("cash_per10_pretax")
@@ -400,6 +415,20 @@ def clean_dividend(
             field="stock_code",
             level="错误",
             message="缺少股票代码",
+        )
+
+    # R8 公告日期合理性：源站用 1900-01-01 表示未知日期
+    if record["announce_date_suspect"]:
+        issues.add(
+            stock_code=code,
+            record_id=record["record_id"],
+            rule="R8",
+            field="announce_date",
+            level="警告",
+            message=(
+                f"公告日期 {record['announce_date']} 早于 {EARLIEST_REASONABLE_ANNOUNCE_DATE}，"
+                "判定为源站未知日期占位，该记录不参与分红年度派生与日期区间统计"
+            ),
         )
 
     # R2 方案内容有效性
@@ -561,6 +590,13 @@ def write_csv(frame: pd.DataFrame, path: Path) -> None:
     frame.to_csv(path, index=False, encoding="utf-8-sig", lineterminator="\n")
 
 
+def frame_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    """导出标准 JSON 记录：缺失值写 null，避免出现 NaN 这类非标准字面量。"""
+    if frame.empty:
+        return []
+    return json.loads(frame.to_json(orient="records", force_ascii=False))
+
+
 def run(
     raw_dir: Path = RAW_DIR,
     data_dir: Path = DATA_DIR,
@@ -719,19 +755,19 @@ def run(
     write_csv(issues_frame.rename(columns=ISSUES_LABELS), data_dir / "issues.csv")
 
     (data_dir / "dividends.json").write_text(
-        json.dumps(dividend_frame.to_dict(orient="records"), ensure_ascii=False, indent=2),
+        json.dumps(frame_records(dividend_frame), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (data_dir / "rights.json").write_text(
-        json.dumps(rights_frame.to_dict(orient="records"), ensure_ascii=False, indent=2),
+        json.dumps(frame_records(rights_frame), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (data_dir / "stocks.json").write_text(
-        json.dumps(stocks_frame.to_dict(orient="records"), ensure_ascii=False, indent=2),
+        json.dumps(frame_records(stocks_frame), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (data_dir / "issues.json").write_text(
-        json.dumps(issues_frame.to_dict(orient="records"), ensure_ascii=False, indent=2),
+        json.dumps(frame_records(issues_frame), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     (data_dir / "quality_report.json").write_text(

@@ -202,7 +202,11 @@
   function renderOverview() {
     var counts = DATA.quality.counts || {};
     var fetchInfo = DATA.meta.fetch || {};
+    // 源站占位日期（1900-01-01）不参与区间统计
     var dates = DATA.dividends
+      .filter(function (row) {
+        return row.announce_date && !row.announce_date_suspect;
+      })
       .map(function (row) {
         return row.announce_date;
       })
@@ -570,7 +574,25 @@
   }
 
   var DIVIDEND_COLUMNS = [
-    { key: "announce_date", label: "公告日期", sortable: true },
+    {
+      key: "announce_date",
+      label: "公告日期",
+      sortable: true,
+      render: function (row) {
+        var wrap = el("span", { className: "cell-inline" });
+        wrap.appendChild(el("span", { text: row.announce_date || "—" }));
+        if (row.announce_date_suspect) {
+          wrap.appendChild(
+            el("span", {
+              className: "badge badge-warn",
+              attrs: { title: "源站以 1900-01-01 表示未知公告日期，该记录不参与年度派生与区间统计" },
+              text: "占位"
+            })
+          );
+        }
+        return wrap;
+      }
+    },
     { key: "dividend_year", label: "分红年度", sortable: true, num: true },
     { key: "allocation_type", label: "分配类型" },
     { key: "cash_per10_pretax", label: "派息(元/10股)", sortable: true, num: true, format: formatNumber },

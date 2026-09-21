@@ -25,8 +25,32 @@ test.describe("新浪财经历史分红数据页面", () => {
     await expect(page.locator('[data-bind="overviewMetrics"] .metric')).toHaveCount(6);
     await expect(tableRows(page, "stockTable")).toHaveCount(3);
     await expect(tableRows(page, "dividendTable")).toHaveCount(8);
-    await expect(page.locator('[data-bind="checkTable"] tbody tr')).toHaveCount(7);
+    await expect(page.locator('[data-bind="checkTable"] tbody tr')).toHaveCount(8);
     expect(errors).toHaveLength(0);
+  });
+
+  test("源站占位公告日期被标记，且不参与年度统计", async ({ page }) => {
+    await openPage(page);
+
+    const rangeHint = await page
+      .locator('[data-bind="overviewMetrics"] .metric')
+      .filter({ hasText: "分红记录" })
+      .locator(".metric-hint")
+      .innerText();
+    expect(rangeHint).not.toContain("1900");
+
+    await page.getByLabel("平安银行 000001").check();
+    await page.getByLabel("搜索公告日期或年份").fill("1900");
+    await expect(tableRows(page, "dividendTable")).toHaveCount(1);
+
+    const row = tableRows(page, "dividendTable").first();
+    await expect(row).toContainText("1900-01-01");
+    await expect(row).toContainText("占位");
+    await expect(row.locator("td").nth(1)).toHaveText("—");
+
+    const ruleRow = page.locator('[data-bind="checkTable"] tbody tr').filter({ hasText: "R8" });
+    await expect(ruleRow).toContainText("命中");
+    await expect(ruleRow.locator("td").nth(2)).toHaveText("1");
   });
 
   test("指标卡数值与数据集一致", async ({ page }) => {
