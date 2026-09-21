@@ -49,6 +49,11 @@ test.describe("新浪财经历史分红数据页面", () => {
     expect(stockRows.join(" ")).toContain("贵州茅台");
     expect(stockRows.join(" ")).toContain("平安银行");
     expect(stockRows.join(" ")).toContain("工商银行");
+    // 股票代码是标识而非金额，不应出现千分位
+    const stockCodes = await page
+      .locator('[data-bind="stockTable"] tbody tr td:first-child')
+      .allInnerTexts();
+    expect(stockCodes).toEqual(["600519", "000001", "601398"]);
   });
 
   test("切换股票后指标、明细表与配股区块联动", async ({ page }) => {

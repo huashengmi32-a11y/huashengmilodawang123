@@ -305,7 +305,8 @@
     clear(table);
 
     var columns = [
-      { key: "stock_code", label: "股票代码", num: true },
+      // 股票代码是标识而非数值，按等宽字体左对齐展示，不加千分位
+      { key: "stock_code", label: "股票代码", mono: true },
       { key: "stock_name", label: "股票名称" },
       { key: "market", label: "上市板块" },
       { key: "industry", label: "行业" },
@@ -317,7 +318,11 @@
     ];
 
     var head = el("tr", {}, columns.map(function (column) {
-      return el("th", { className: column.num ? "num" : "", attrs: { scope: "col" }, text: column.label });
+      return el("th", {
+        className: column.num ? "num" : column.mono ? "mono" : "",
+        attrs: { scope: "col" },
+        text: column.label
+      });
     }));
     table.appendChild(el("thead", {}, [head]));
 
@@ -326,7 +331,7 @@
       body.appendChild(
         el("tr", {}, columns.map(function (column) {
           var value = stock[column.key];
-          var cell = el("td", { className: column.num ? "num" : "" });
+          var cell = el("td", { className: column.num ? "num" : column.mono ? "mono" : "" });
           if (column.key === "latest_status") {
             cell.appendChild(statusBadge(value));
           } else if (column.key === "cash_total_pretax") {
@@ -741,7 +746,7 @@
       { key: "announce_date", label: "公告日期" },
       { key: "rights_per10", label: "配股(股/10股)", num: true },
       { key: "rights_price", label: "配股价(元)", num: true },
-      { key: "base_share_capital", label: "基准股本(股)", num: true },
+      { key: "base_share_capital", label: "基准股本(股)", num: true, thousands: true },
       { key: "ex_rights_date", label: "除权日" },
       { key: "record_date", label: "股权登记日" },
       { key: "payment_start", label: "缴款起始" },
@@ -765,7 +770,9 @@
           var cell = el("td", { className: column.num ? "num" : "" });
           if (value === null || value === undefined || value === "") {
             cell.textContent = "—";
-            cell.className = "cell-muted";
+            cell.className += " cell-muted";
+          } else if (column.thousands) {
+            cell.textContent = formatInt(value);
           } else if (column.num) {
             cell.textContent = formatNumber(value, 2);
           } else {

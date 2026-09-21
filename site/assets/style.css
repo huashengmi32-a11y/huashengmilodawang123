@@ -452,6 +452,10 @@ svg.icon {
   font-family: var(--font-mono);
 }
 
+.data-table .mono {
+  font-family: var(--font-mono);
+}
+
 .data-table .cell-muted {
   color: var(--color-muted-foreground);
 }
