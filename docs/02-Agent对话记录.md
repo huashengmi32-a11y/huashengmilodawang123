@@ -143,14 +143,47 @@
 
 ---
 
-## 轮次 5：交付
+## 轮次 5：提交与推送
 
-Agent 完成 Git 提交与推送后，向用户交付：
+**Agent：**
+
+> 本地已完成 5 个提交（配置 → 数据管线 → 网页 → 测试 → 文档）。
+> 推送时发现 GitHub 直连不稳定（连接被重置），检测到本机代理端口可用后，
+> 将代理写入**仓库本地**配置（不写入全局配置）并重新推送。
+> 推送触发了 Git Credential Manager 的浏览器授权流程。
+
+**用户：**
+
+> Signed in as **@huashengmi32-a11y**，Enter the verification code sent to h\*\*\*\*\*@gmail.com，这什么意思
+
+**Agent：**
+
+> 那是 GitHub 的**新设备登录安全验证**：GitHub 认为本次登录来自新设备/新网络，
+> 于是向账号绑定邮箱发送 6 位验证码，要求在页面上填写完成验证。
+> 这一步与代码推送无关——推送此时已经成功，浏览器验证只影响该浏览器里的登录状态，
+> 是否完成可自行决定。
+
+**推送结果：**
+
+| 项目 | 内容 |
+| --- | --- |
+| 远端仓库 | `https://github.com/huashengmi32-a11y/huashengmilodawang123` |
+| 远端分支 | `main`（已设置上游跟踪） |
+| 提交数量 | 5 |
+| 提交列表 | `53829c4` 初始化配置 → `c77ef6b` 数据管线 → `e89be12` 网页与设计系统 → `a18e02f` 测试与截图 → `10043a4` 文档 |
+| 远端文件 | 40 个；原始 HTML 缓存、`node_modules`、测试报告产物均未入库 |
+
+---
+
+## 轮次 6：最终交付清单
 
 | 交付项 | 位置 |
 | --- | --- |
-| Git 仓库 | `https://github.com/<GitHub 用户名>/huashengmilodawang123` |
+| Git 仓库 | `https://github.com/huashengmi32-a11y/huashengmilodawang123` |
+| 网页源码 | `site/index.html`、`site/assets/{style.css,app.js,data.js}` |
 | 网页截图 | `docs/screenshots/`（桌面 + 移动，共 8 张） |
 | 本对话记录 | `docs/02-Agent对话记录.md` |
 | 需求确认单 | `docs/01-需求确认单.md` |
 | 测试报告 | `docs/03-测试报告.md` |
+| 数据管线 | `scripts/`（抓取 / 清洗 / 打包） |
+| 数据集 | `data/`（CSV + JSON + 质量报告） |
