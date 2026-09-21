@@ -154,7 +154,7 @@
 
 **用户：**
 
-> Signed in as **@huashengmi32-a11y**，Enter the verification code sent to h\*\*\*\*\*@gmail.com，这什么意思
+> Signed in as **@huashengmi32-a11y**，Enter the verification code sent to `<已脱敏邮箱>`，这什么意思
 
 **Agent：**
 
@@ -207,3 +207,99 @@
 | 测试报告 | `docs/03-测试报告.md` |
 | 数据管线 | `scripts/`（抓取 / 清洗 / 打包） |
 | 数据集 | `data/`（CSV + JSON + 质量报告） |
+
+---
+
+## 轮次 7：浏览器打不开 `127.0.0.1:7897`
+
+**用户：**（浏览器报错页文字）
+
+> # 无法访问此站点
+> 无法加载 127.0.0.1
+> 尝试：检查网络连接 / 检查代理、防火墙和 DNS 配置
+> ERR_HTTP_RESPONSE_CODE_FAILURE
+
+**Agent：**
+
+> `127.0.0.1:7897` 是本机代理软件的端口，只接受代理请求，浏览器直接打开必然报错，这个地址不需要也不应该访问。
+> 已为项目启动本地静态服务：`http://127.0.0.1:8123/site/index.html`，并在应用内浏览器中打开。
+
+### 7.1 打开页面复核时又发现两个问题
+
+页面渲染正常，但通读无障碍树与页面文本时发现：
+
+1. 概览的日期区间显示 `1900-01-01 至 2026-09-17` —— 源站用 `1900-01-01` 表示未知公告日期
+   （平安银行 1991 年送股记录），管线未做合理性校验，还据此推断出「1899 年度分配」；
+2. `data/*.json` 中出现 `NaN` 字面量，不是标准 JSON。
+
+修复（提交 `e3a4b73`）：新增第 8 条规则 R8「公告日期合理性」，占位记录标记「公告日期存疑」且不参与
+年度派生与区间统计，页面在公告日期列显示「占位」徽标；导出改用 `DataFrame.to_json`，缺失值统一写
+`null`。补 1 条回归用例后，32 条用例全部通过。
+
+---
+
+## 轮次 8：提交包与公网隧道
+
+**用户：**
+
+> 给我我需要提交的内容，能做一个隧道吗，可以供其他用户观看
+
+**Agent：**
+
+> 已在 `outputs/submission/` 生成提交包，并压缩为 `新浪财经历史分红数据获取与预处理-提交包.zip`
+> （21 个文件，约 4.4 MB），内含提交清单、三份文档、8 张截图与可离线打开的网页源文件。
+>
+> 公网预览使用 cloudflared 快速隧道发布（无需账号）：<https://howto-certificate-latina-involves.trycloudflare.com>
+>
+> 注意：隧道依赖本机进程，关机、休眠或结束进程后立即失效，正式提交请以 Git 仓库链接与包内截图为准。
+
+---
+
+## 轮次 9：确认 ui-ux-pro-max skill 的使用情况
+
+**用户：**
+
+> ui-ux-pro-max-skil 你有安装和使用这个skill吗
+
+**Agent：**
+
+> **安装**：没有。该 skill 在接手前已存在于本机 skill 目录，全程只调用，未执行安装。
+>
+> **使用**：共 3 次查询 + 1 次重试。
+> ① `--design-system --persist -p "Sina Dividend Lab" --variance 3 --density 8 --motion 3`
+> 生成 `design-system/sina-dividend-lab/MASTER.md`；
+> ② `"data table scanability" --domain ux`；③ `"financial time series trend" --domain chart`。
+>
+> 首次 `--design-system` 返回的是营销首页版式（Enterprise Gateway），与数据报告页不匹配，
+> 按 skill 要求换用更聚焦的查询重试，并把取舍记录在 `design-system/sina-dividend-lab/pages/report-page.md`。
+>
+> **落地证据**：`site/assets/style.css` 中的配色 `#1E40AF` / `#D97706`、字体 Fira Sans / Fira Code、
+> 密度 8/10 的间距刻度，以及 Pre-Delivery Checklist 里的对比度、触控尺寸、reduced-motion 等要求，
+> 均可与 `MASTER.md` 逐项对应。
+
+---
+
+## 轮次 10：Git 链接
+
+**用户：**
+
+> 给我我的git链接地址
+
+**Agent：**
+
+> `https://github.com/huashengmi32-a11y/huashengmilodawang123`
+> （分支 `main`，10 个提交，40 个文件，最新提交 `bd48482`）
+
+---
+
+## 轮次 11：把对话文档输出到桌面
+
+**用户：**
+
+> 提交跟 Agent 交互的全部对话，输出 markdown 文档提交（提交记录要脱敏，即屏蔽敏感信息），给我文档生成在桌面上
+
+**Agent：**
+
+> 已将本文件输出到桌面：
+> `C:\Users\<用户名>\Desktop\与Agent交互对话记录-新浪财经历史分红数据获取与预处理.md`，
+> 并同步更新仓库内的 `docs/02-Agent对话记录.md`。
