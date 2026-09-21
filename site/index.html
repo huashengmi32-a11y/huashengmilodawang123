@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新浪财经历史分红数据获取与预处理 · 数据管线演示</title>
+  <meta name="description" content="抓取新浪财经个股分红送转数据，清洗为结构化数据集，并展示处理流程、结果与数据质量报告。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E40AF'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='3.4' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M7 10v6c0 1.9 4 3.4 9 3.4s9-1.5 9-3.4v-6' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M7 16v6c0 1.9 4 3.4 9 3.4s9-1.5 9-3.4v-6' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+            <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path>
+            <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path>
+          </svg>
+        </span>
+        <div class="brand-text">
+          <h1 class="brand-title">新浪财经历史分红数据获取与预处理</h1>
+          <p class="brand-sub">
+            数据源 <span data-bind="sourceName">新浪财经</span> ·
+            生成时间 <span data-bind="generatedAt">—</span>
+          </p>
+        </div>
+      </div>
+      <nav class="site-nav" aria-label="页面章节">
+        <a href="#overview">概览</a>
+        <a href="#pipeline">流程</a>
+        <a href="#dataset">数据结果</a>
+        <a href="#quality">质量报告</a>
+        <a href="#deliverables">交付物</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============================ 概览 ============================ -->
+    <section id="overview" class="band">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">项目概览</p>
+          <h2>从新浪财经网页到可分析数据集</h2>
+          <p class="lead">
+            以个股「分红送转」页面与「分红明细」页面为数据源，抓取原始 HTML，
+            经解析、清洗、校验后输出结构化数据集，并把完整处理链路与本页一并交付。
+          </p>
+        </header>
+
+        <dl class="metric-grid" data-bind="overviewMetrics"></dl>
+
+        <div class="source-line">
+          <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7L12 5"></path>
+            <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"></path>
+          </svg>
+          <span>
+            抓取入口：<a data-bind="sourceListUrl" href="#" rel="noreferrer noopener">—</a> ·
+            明细页：<a data-bind="sourceDetailUrl" href="#" rel="noreferrer noopener">—</a>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ 流程 ============================ -->
+    <section id="pipeline" class="band band-alt">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">实现过程</p>
+          <h2>五步处理链路</h2>
+          <p class="lead">每一步都落盘可复现：原始页面留在 <code>data/raw/</code>，清洗结果留在 <code>data/</code>，网页只读取脚本产物。</p>
+        </header>
+
+        <ol class="pipeline" data-bind="pipeline">
+          <li class="pipeline-step">
+            <span class="step-index">01</span>
+            <h3>抓取</h3>
+            <p>复用会话依次拉取列表页与 96 个明细页，原始 HTML 落地缓存；请求间隔限速，失败按退避策略重试。</p>
+            <ul class="step-facts" data-bind="fetchFacts"></ul>
+          </li>
+          <li class="pipeline-step">
+            <span class="step-index">02</span>
+            <h3>解析</h3>
+            <p>用 BeautifulSoup 定位 <code>sharebonus_1</code>（分红）、<code>sharebonus_2</code>（配股）与 <code>sharebonusdetail</code>（明细）三张表，按表头列位取字段。</p>
+            <ul class="step-facts">
+              <li>分红表 8 个字段</li>
+              <li>配股表 10 个字段</li>
+              <li>明细页 7 个补充字段</li>
+            </ul>
+          </li>
+          <li class="pipeline-step">
+            <span class="step-index">03</span>
+            <h3>清洗</h3>
+            <p>「--」「暂无」等占位符统一成缺失值，日期归一为 ISO 格式，数值去除千分位与单位，并派生出分析口径字段。</p>
+            <ul class="step-facts" data-bind="cleanFacts"></ul>
+          </li>
+          <li class="pipeline-step">
+            <span class="step-index">04</span>
+            <h3>校验</h3>
+            <p>七条规则逐条检查完整性与跨字段逻辑，命中项写入问题日志，与数据一起交付以便追溯。</p>
+            <ul class="step-facts" data-bind="checkFacts"></ul>
+          </li>
+          <li class="pipeline-step">
+            <span class="step-index">05</span>
+            <h3>导出</h3>
+            <p>同时输出便于 Excel 查看的 CSV、便于程序消费的 JSON，以及质量报告与网页数据包。</p>
+            <ul class="step-facts">
+              <li>CSV 4 个（UTF-8 BOM）</li>
+              <li>JSON 5 个</li>
+              <li>网页数据 1 个</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============================ 数据结果 ============================ -->
+    <section id="dataset" class="band">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">处理结果</p>
+          <h2>分红数据集</h2>
+          <p class="lead">下表为清洗后的分红明细，可切换股票、筛选方案类型、按列排序；金额均为税前口径。</p>
+        </header>
+
+        <div class="stock-overview">
+          <h3 class="subhead">目标股票概览</h3>
+          <div class="table-wrap">
+            <table class="data-table" data-bind="stockTable">
+              <caption class="visually-hidden">三只目标股票的分红与配股记录概览</caption>
+            </table>
+          </div>
+        </div>
+
+        <div class="workbench">
+          <div class="workbench-bar">
+            <fieldset class="segmented">
+              <legend class="visually-hidden">选择股票</legend>
+              <div class="segmented-items" data-bind="stockSelector"></div>
+            </fieldset>
+            <a class="button button-ghost" href="../data/dividends.csv" download>
+              <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path>
+              </svg>
+              下载分红 CSV
+            </a>
+          </div>
+
+          <dl class="metric-grid metric-grid-compact" data-bind="stockMetrics"></dl>
+
+          <figure class="chart-panel">
+            <figcaption class="chart-head">
+              <div>
+                <h3>按分红年度汇总的每股派息</h3>
+                <p class="chart-sub" data-bind="chartSub">—</p>
+              </div>
+              <p class="chart-legend">
+                <span class="legend-swatch" aria-hidden="true"></span>每股派息（元，税前）
+              </p>
+            </figcaption>
+            <div class="chart-canvas" data-bind="chart"></div>
+          </figure>
+
+          <div class="filter-bar">
+            <label class="search-field">
+              <span class="field-label">搜索公告日期或年份</span>
+              <input type="search" data-bind="searchInput" placeholder="例如 2024 或 2024-06" autocomplete="off">
+            </label>
+            <fieldset class="chip-group">
+              <legend class="field-label">方案筛选</legend>
+              <label class="chip"><input type="checkbox" value="cash" data-bind="filter"><span>含现金分红</span></label>
+              <label class="chip"><input type="checkbox" value="share" data-bind="filter"><span>含送转</span></label>
+              <label class="chip"><input type="checkbox" value="none" data-bind="filter"><span>不分配</span></label>
+            </fieldset>
+          </div>
+
+          <div class="table-wrap table-wrap-tall">
+            <table class="data-table data-table-main" data-bind="dividendTable">
+              <caption class="visually-hidden">所选股票的历史分红明细，可按列排序</caption>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <p class="table-count" data-bind="tableCount" role="status">—</p>
+            <div class="pager">
+              <button type="button" class="button button-ghost" data-bind="prevPage">
+                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                上一页
+              </button>
+              <span class="pager-status" data-bind="pageStatus">—</span>
+              <button type="button" class="button button-ghost" data-bind="nextPage">
+                下一页
+                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rights-block" data-bind="rightsBlock" hidden>
+          <h3 class="subhead">配股记录</h3>
+          <div class="table-wrap">
+            <table class="data-table" data-bind="rightsTable">
+              <caption class="visually-hidden">所选股票的配股记录</caption>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ 质量报告 ============================ -->
+    <section id="quality" class="band band-alt">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">数据质量</p>
+          <h2>校验规则与字段覆盖率</h2>
+          <p class="lead">规则全部在脚本中显式声明，命中项写入 <code>data/issues.csv</code>，不做静默丢弃。</p>
+        </header>
+
+        <div class="quality-layout">
+          <div class="quality-main">
+            <h3 class="subhead">校验规则</h3>
+            <div class="table-wrap">
+              <table class="data-table" data-bind="checkTable">
+                <caption class="visually-hidden">七条数据质量规则的执行结果</caption>
+              </table>
+            </div>
+          </div>
+          <aside class="quality-side">
+            <h3 class="subhead">问题分布</h3>
+            <ul class="issue-summary" data-bind="issueSummary"></ul>
+            <h3 class="subhead">口径说明</h3>
+            <ul class="note-list" data-bind="notes"></ul>
+          </aside>
+        </div>
+
+        <div class="coverage-block">
+          <h3 class="subhead">关键字段覆盖率</h3>
+          <ul class="coverage-list" data-bind="coverage"></ul>
+        </div>
+
+        <div class="issues-block">
+          <h3 class="subhead">问题明细</h3>
+          <div class="table-wrap">
+            <table class="data-table" data-bind="issueTable">
+              <caption class="visually-hidden">逐条数据质量问题记录</caption>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ 交付物 ============================ -->
+    <section id="deliverables" class="band">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">交付与复现</p>
+          <h2>文件清单与运行方式</h2>
+          <p class="lead">整条链路只需要 Python 与两个第三方库，按顺序执行三个脚本即可从零复现全部产物。</p>
+        </header>
+
+        <div class="deliverable-layout">
+          <div class="deliverable-main">
+            <h3 class="subhead">目录结构</h3>
+            <div class="table-wrap">
+              <table class="data-table" data-bind="fileTable">
+                <caption class="visually-hidden">项目目录与文件说明</caption>
+              </table>
+            </div>
+          </div>
+          <aside class="deliverable-side">
+            <h3 class="subhead">复现命令</h3>
+            <pre class="code-block"><code>pip install -r requirements.txt
+python scripts/fetch_sina.py
+python scripts/preprocess.py
+python scripts/build_site.py</code></pre>
+            <h3 class="subhead">网页测试</h3>
+            <pre class="code-block"><code>npm install
+npx playwright test</code></pre>
+            <p class="test-note" data-bind="testNote">—</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>数据来源：新浪财经个股分红送转页面，仅用于课程作业与学习演示，版权归原站所有。</p>
+      <p class="footer-meta">数据集生成时间 <span data-bind="generatedAt">—</span> · 页面数据由 <code>scripts/build_site.py</code> 生成</p>
+    </div>
+  </footer>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
