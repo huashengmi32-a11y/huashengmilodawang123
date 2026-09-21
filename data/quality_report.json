@@ -1,0 +1,439 @@
+{
+  "generated_at": "2026-09-21T20:18:06+08:00",
+  "source": {
+    "name": "新浪财经",
+    "list_url": "http://vip.stock.finance.sina.com.cn/corp/go.php/vISSUE_ShareBonus/stockid/{code}.phtml",
+    "detail_url": "http://vip.stock.finance.sina.com.cn/corp/view/vISSUE_ShareBonusDetail.php",
+    "referer": "http://vip.stock.finance.sina.com.cn/",
+    "encoding": "gb2312",
+    "note": "数据仅用于课程作业与学习演示，版权归新浪财经所有。"
+  },
+  "counts": {
+    "stocks": 3,
+    "dividend_records": 92,
+    "rights_records": 4,
+    "issues": 8,
+    "duplicates_removed": 0,
+    "detail_pages": 96
+  },
+  "checks": [
+    {
+      "id": "R1",
+      "name": "关键字段完整性",
+      "description": "股票代码与公告日期必须存在且可解析",
+      "hits": 0,
+      "passed": true
+    },
+    {
+      "id": "R2",
+      "name": "方案内容有效性",
+      "description": "送股、转增、派息三项至少一项大于 0，排除空方案",
+      "hits": 8,
+      "passed": false
+    },
+    {
+      "id": "R3",
+      "name": "除权除息日不早于公告日",
+      "description": "实施类方案的除权除息日必须晚于或等于公告日",
+      "hits": 0,
+      "passed": true
+    },
+    {
+      "id": "R4",
+      "name": "股权登记日不晚于除权除息日",
+      "description": "先登记后除权，跨字段日期顺序校验",
+      "hits": 0,
+      "passed": true
+    },
+    {
+      "id": "R5",
+      "name": "数值非负",
+      "description": "送股、转增、派息等比例字段不允许出现负值",
+      "hits": 0,
+      "passed": true
+    },
+    {
+      "id": "R6",
+      "name": "明细页与列表页交叉校验",
+      "description": "明细页税前红利与列表页派息差额不超过 0.01 元（舍入容差）",
+      "hits": 0,
+      "passed": true
+    },
+    {
+      "id": "R7",
+      "name": "主键唯一",
+      "description": "同一股票下 (公告日期) 不重复，重复记录清理后保留一条",
+      "hits": 0,
+      "passed": true
+    }
+  ],
+  "issue_summary": {
+    "提示": 8
+  },
+  "issue_by_rule": {
+    "R2": 8
+  },
+  "field_coverage": {
+    "stock_code": {
+      "label": "股票代码",
+      "description": "6 位证券代码，来源于目标清单",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "stock_name": {
+      "label": "股票名称",
+      "description": "证券简称，从数据源页面标题解析",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "record_id": {
+      "label": "记录编号",
+      "description": "派生字段：记录主键，格式 {股票代码}-{公告日期}",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "announce_date": {
+      "label": "公告日期",
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "dividend_year": {
+      "label": "分红年度",
+      "description": "派生字段：按公告月份推断的利润所属年度",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "allocation_type": {
+      "label": "分配类型",
+      "description": "派生字段：年度分配 / 中期分配（按公告月份推断）",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "implement_year": {
+      "label": "实施年度",
+      "description": "派生字段：除权除息日所在年份，缺失时回退到公告年份",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "status": {
+      "label": "方案进度",
+      "description": "数据源给出的方案进度，如「实施」",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "bonus_share_per10": {
+      "label": "送股(股/10股)",
+      "description": "每 10 股送股数，缺失按 0 处理",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "transfer_share_per10": {
+      "label": "转增(股/10股)",
+      "description": "每 10 股转增数，缺失按 0 处理",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "cash_per10_pretax": {
+      "label": "派息税前(元/10股)",
+      "description": "每 10 股税前派息金额，单位为元",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "cash_per_share_pretax": {
+      "label": "每股派息税前(元)",
+      "description": "派生字段：每 10 股税前派息 ÷ 10",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "ex_dividend_date": {
+      "label": "除权除息日",
+      "description": "除权除息日",
+      "non_null": 83,
+      "total": 92,
+      "rate": 0.9022
+    },
+    "record_date": {
+      "label": "股权登记日",
+      "description": "股权登记日",
+      "non_null": 82,
+      "total": 92,
+      "rate": 0.8913
+    },
+    "bonus_listing_date": {
+      "label": "红股上市日",
+      "description": "红股上市日，未送股时为缺失",
+      "non_null": 4,
+      "total": 92,
+      "rate": 0.0435
+    },
+    "detail_cash_pretax": {
+      "label": "明细页税前红利(元)",
+      "description": "分红明细页给出的税前红利，用于交叉校验",
+      "non_null": 81,
+      "total": 92,
+      "rate": 0.8804
+    },
+    "detail_cash_aftertax": {
+      "label": "明细页税后红利(元)",
+      "description": "分红明细页给出的税后红利",
+      "non_null": 61,
+      "total": 92,
+      "rate": 0.663
+    },
+    "shareholders_meeting_date": {
+      "label": "股东大会决议公告日",
+      "description": "股东大会决议公告日",
+      "non_null": 80,
+      "total": 92,
+      "rate": 0.8696
+    },
+    "dividend_pay_date": {
+      "label": "红利到账日",
+      "description": "红利/送转股到账日",
+      "non_null": 79,
+      "total": 92,
+      "rate": 0.8587
+    },
+    "has_cash": {
+      "label": "含现金分红",
+      "description": "派生字段：本次方案是否包含现金分红",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "has_bonus_share": {
+      "label": "含送股",
+      "description": "派生字段：本次方案是否包含送股",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "has_transfer_share": {
+      "label": "含转增",
+      "description": "派生字段：本次方案是否包含转增",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    },
+    "source_url": {
+      "label": "数据来源",
+      "description": "该条记录对应的数据源页面地址",
+      "non_null": 92,
+      "total": 92,
+      "rate": 1.0
+    }
+  },
+  "rights_field_coverage": {
+    "stock_code": {
+      "label": "股票代码",
+      "description": "6 位证券代码，来源于目标清单",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "stock_name": {
+      "label": "股票名称",
+      "description": "证券简称，从数据源页面标题解析",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "record_id": {
+      "label": "记录编号",
+      "description": "派生字段：记录主键，格式 {股票代码}-{公告日期}",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "announce_date": {
+      "label": "公告日期",
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "rights_per10": {
+      "label": "配股方案(股/10股)",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "rights_price": {
+      "label": "配股价格(元)",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "base_share_capital": {
+      "label": "基准股本(股)",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "ex_rights_date": {
+      "label": "除权日",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "record_date": {
+      "label": "股权登记日",
+      "description": "股权登记日",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "payment_start": {
+      "label": "缴款起始日",
+      "description": "",
+      "non_null": 0,
+      "total": 4,
+      "rate": 0.0
+    },
+    "payment_end": {
+      "label": "缴款终止日",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "listing_date": {
+      "label": "配股上市日",
+      "description": "",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "raised_funds": {
+      "label": "募集资金合计(元)",
+      "description": "",
+      "non_null": 0,
+      "total": 4,
+      "rate": 0.0
+    },
+    "source_url": {
+      "label": "数据来源",
+      "description": "该条记录对应的数据源页面地址",
+      "non_null": 4,
+      "total": 4,
+      "rate": 1.0
+    }
+  },
+  "field_dictionary": {
+    "stock_code": {
+      "label": "股票代码",
+      "description": "6 位证券代码，来源于目标清单"
+    },
+    "stock_name": {
+      "label": "股票名称",
+      "description": "证券简称，从数据源页面标题解析"
+    },
+    "record_id": {
+      "label": "记录编号",
+      "description": "派生字段：记录主键，格式 {股票代码}-{公告日期}"
+    },
+    "announce_date": {
+      "label": "公告日期",
+      "description": "分红方案公告日期，统一为 ISO 格式 yyyy-mm-dd"
+    },
+    "dividend_year": {
+      "label": "分红年度",
+      "description": "派生字段：按公告月份推断的利润所属年度"
+    },
+    "allocation_type": {
+      "label": "分配类型",
+      "description": "派生字段：年度分配 / 中期分配（按公告月份推断）"
+    },
+    "implement_year": {
+      "label": "实施年度",
+      "description": "派生字段：除权除息日所在年份，缺失时回退到公告年份"
+    },
+    "status": {
+      "label": "方案进度",
+      "description": "数据源给出的方案进度，如「实施」"
+    },
+    "bonus_share_per10": {
+      "label": "送股(股/10股)",
+      "description": "每 10 股送股数，缺失按 0 处理"
+    },
+    "transfer_share_per10": {
+      "label": "转增(股/10股)",
+      "description": "每 10 股转增数，缺失按 0 处理"
+    },
+    "cash_per10_pretax": {
+      "label": "派息税前(元/10股)",
+      "description": "每 10 股税前派息金额，单位为元"
+    },
+    "cash_per_share_pretax": {
+      "label": "每股派息税前(元)",
+      "description": "派生字段：每 10 股税前派息 ÷ 10"
+    },
+    "ex_dividend_date": {
+      "label": "除权除息日",
+      "description": "除权除息日"
+    },
+    "record_date": {
+      "label": "股权登记日",
+      "description": "股权登记日"
+    },
+    "bonus_listing_date": {
+      "label": "红股上市日",
+      "description": "红股上市日，未送股时为缺失"
+    },
+    "detail_cash_pretax": {
+      "label": "明细页税前红利(元)",
+      "description": "分红明细页给出的税前红利，用于交叉校验"
+    },
+    "detail_cash_aftertax": {
+      "label": "明细页税后红利(元)",
+      "description": "分红明细页给出的税后红利"
+    },
+    "shareholders_meeting_date": {
+      "label": "股东大会决议公告日",
+      "description": "股东大会决议公告日"
+    },
+    "dividend_pay_date": {
+      "label": "红利到账日",
+      "description": "红利/送转股到账日"
+    },
+    "has_cash": {
+      "label": "含现金分红",
+      "description": "派生字段：本次方案是否包含现金分红"
+    },
+    "has_bonus_share": {
+      "label": "含送股",
+      "description": "派生字段：本次方案是否包含送股"
+    },
+    "has_transfer_share": {
+      "label": "含转增",
+      "description": "派生字段：本次方案是否包含转增"
+    },
+    "source_url": {
+      "label": "数据来源",
+      "description": "该条记录对应的数据源页面地址"
+    }
+  },
+  "notes": [
+    "字段「分红年度」「分配类型」为推断字段：公告月份 ≤ 8 归入上一年度分配，≥ 9 归入本期中期/特别分配，用于分组统计，不代表公司官方口径。",
+    "「派息(税前)(元/10股)」与明细页「税前红利」均为每 10 股口径，派生字段「每股派息税前」按 ÷10 折算。",
+    "明细页中存在大量「--」占位符，统一按缺失值处理，不计入字段覆盖率分子。",
+    "原始 HTML 保存在 data/raw/ 并被 .gitignore 忽略，可通过 fetch_sina.py 复现。"
+  ]
+}

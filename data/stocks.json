@@ -1,0 +1,35 @@
+[
+  {
+    "stock_code": "600519",
+    "stock_name": "贵州茅台",
+    "market": "上交所主板",
+    "industry": "白酒",
+    "dividend_records": 31,
+    "rights_records": 0,
+    "cash_total_pretax": 325.6602,
+    "latest_announce_date": "2026-06-22",
+    "latest_status": "实施"
+  },
+  {
+    "stock_code": "000001",
+    "stock_name": "平安银行",
+    "market": "深交所主板",
+    "industry": "股份制银行",
+    "dividend_records": 38,
+    "rights_records": 3,
+    "cash_total_pretax": 6.8215,
+    "latest_announce_date": "2026-09-17",
+    "latest_status": "实施"
+  },
+  {
+    "stock_code": "601398",
+    "stock_name": "工商银行",
+    "market": "上交所主板",
+    "industry": "国有大型银行",
+    "dividend_records": 23,
+    "rights_records": 1,
+    "cash_total_pretax": 4.7875,
+    "latest_announce_date": "2026-08-29",
+    "latest_status": "预案"
+  }
+]
